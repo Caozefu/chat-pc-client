@@ -1,4 +1,6 @@
-import {Toast} from "vant";
+import {Message} from "element-ui";
+import { remote } from 'electron'
+const { Notification } = remote;
 
 export function initNotice() {
     if (window.Notification) {
@@ -7,7 +9,7 @@ export function initNotice() {
             Notification.requestPermission();
         }
     } else {
-        Toast.fail('浏览器不支持桌面通知');
+        Message.error('浏览器不支持桌面通知');
     }
 
 }
@@ -23,4 +25,12 @@ export function pushNotice(name, icon, message) {
         let notice = new Notification(name, options);
         console.log(notice)
     }
+}
+
+export function createNotice(name, icon, message) {
+    const notify = new Notification({
+        title: name,
+        body: message
+    });
+    notify.show();
 }

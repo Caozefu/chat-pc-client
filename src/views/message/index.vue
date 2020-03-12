@@ -1,25 +1,44 @@
 <template>
     <div class="message">
-        <van-sticky>
-            <van-nav-bar title="消息列表"/>
-        </van-sticky>
-        <van-cell-group>
-            <van-cell v-for="(item, index) in messageList" :key="index" @click="toDetail(item.id, item.name)">
-                <template slot="title">
-                    <div class="message-list-left">
-                        <div class="portrait">
-                            <img :src="item.portrait" alt="">
-                            <van-tag type="danger" v-if="getUnreadNum(item.id)">{{getUnreadNum(item.id)}}</van-tag>
-                        </div>
-                        <div class="custom-title">
-                            <p class="user-name">{{item.name}}</p>
-                            <p class="last-message">{{item.msg}}</p>
-                        </div>
-                    </div>
-                </template>
-                <span class="message-time">{{item.time | formatTime}}</span>
-            </van-cell>
-        </van-cell-group>
+        <div class="message-list">
+            <div class="top-drag"></div>
+            <List>
+                <ListItem v-for="(item, index) in messageList" :key="index" @click.native="toDetail(item.id, item.name)">
+                    <ListItemMeta :avatar="item.portrait"
+                                  :title="item.name"
+                                  :description="item.msg" />
+                    <template slot="action">
+                        <li>
+                            <span>{{item.time | formatTime}}</span>
+                        </li>
+                    </template>
+                </ListItem>
+            </List>
+        </div>
+        <div style="overflow: hidden">
+            <message-detail :user-name="userName" :target-id="targetId" />
+        </div>
+<!--        <van-sticky>-->
+<!--            <van-nav-bar title="消息列表"/>-->
+<!--        </van-sticky>-->
+<!--        <van-cell-group>-->
+<!--            <van-cell v-for="(item, index) in messageList" :key="index" @click="toDetail(item.id, item.name)">-->
+<!--                <template slot="title">-->
+<!--                    <div class="message-list-left">-->
+<!--                        <div class="portrait">-->
+<!--                            <img :src="item.portrait" alt="">-->
+<!--                            <van-tag type="danger" v-if="getUnreadNum(item.id)">{{getUnreadNum(item.id)}}</van-tag>-->
+<!--                        </div>-->
+<!--                        <div class="custom-title">-->
+<!--                            <p class="user-name">{{item.name}}</p>-->
+<!--                            <p class="last-message">{{item.msg}}</p>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </template>-->
+<!--                <span class="message-time">{{item.time | formatTime}}</span>-->
+<!--            </van-cell>-->
+<!--        </van-cell-group>-->
+
     </div>
 </template>
 
@@ -27,7 +46,8 @@
     import { mapState } from 'vuex';
     import io from "socket.io-client";
     import sortArrayByKey from "../../utils/sortArrayByKey";
-    import { pushNotice } from "../../utils/notice";
+    import MessageDetail from "./messageDetail";
+    import { createNotice } from "../../utils/notice";
 
     export default {
         name: "message",
@@ -36,50 +56,87 @@
                 messageList: [],
                 messageCache: {
                     unreadNum: {}
-                }
+                },
+                userName: '',
+                targetId: -1
             }
+        },
+        components: {
+            MessageDetail
         },
         computed: {
             ...mapState({
                 userInfo: 'userInfo',
-            })
+            }),
+            // userName() {
+            //     return this.$route.query.name || '';
+            // },
+            // targetId() {
+            //     return this.$route.query.id || -1;
+            // }
+        },
+        watch: {
+            $route: {
+                handler(val) {
+                    if (!val.query.name) return;
+                    this.userName = val.query.name;
+                    this.targetId = val.query.id;
+                },
+                deep: true
+            }
         },
         filters: {
             formatTime(value) {
-                return `${new Date(value).getHours()}:${new Date(value).getMinutes()}`;
+                const minute = new Date(value).getMinutes();
+                return `${new Date(value).getHours()}:${minute < 10 ? '0' + minute : minute}`;
             }
         },
         methods: {
             toDetail(id, name) {
-                this.$router.push({
-                    name: 'messageDetail',
-                    query: {
-                        name,
-                        id
-                    }
-                });
+                // this.$router.push({
+                //     name: 'messageDetail',
+                //     query: {
+                //         name,
+                //         id
+                //     }
+                // });
+                this.targetId = id;
+                this.userName = name;
             },
             // 监听消息记录
             listenMessage() {
                 this.IO = io.connect(process.env.VUE_APP_IO_URL);
                 this.IO.on(this.userInfo.user_uid, (data) => {
-                    this.setStorage(data);
-                    // 发送通知
-                    if (data.id !== this.userInfo.user_uid) pushNotice(data.name, data.portrait, data.msg);
-
-                    let current = this.messageList.find(item => item.id === data.id);
-                    if (current) {
-                        const index = this.messageList.indexOf(current);
-                        this.messageList.splice(index, 1);
-                        this.messageList.unshift(data);
-                    } else {
-                        this.messageList.unshift(data);
+                    const id = data.id;
+                    if (id === this.userInfo.user_uid) {
+                        // 当前用户发送的消息
+                        this.setStorage(data, 1);
+                        this.getStorage();
+                        return;
                     }
+
+                    // 接收其他用户的消息
+                    this.setStorage(data, 0);
+                    // 发送通知
+                    createNotice(data.name, data.portrait, data.msg);
+                    // if (data.id !== this.userInfo.user_uid) pushNotice(data.name, data.portrait, data.msg);
+
+                    // let current = this.messageList.find(item => item.id === data.id);
+                    // if (current) {
+                    //     const index = this.messageList.indexOf(current);
+                    //     this.messageList.splice(index, 1);
+                    //     this.messageList.unshift(data);
+                    // } else {
+                    //     this.messageList.unshift(data);
+                    // }
+                    this.getStorage();
                 });
             },
-            // 存储聊天记录
-            setStorage(data) {
-                const id = data.id;
+            /** 存储聊天记录,
+             * status: 0 其他用户， 1 当前用户
+             * */
+            setStorage(data, status) {
+                const id = status ? data.target : data.id;
                 if (!this.messageCache[id]) {
                     this.messageCache[id] = [];
                     this.messageCache.unreadNum[id] = 0;
@@ -93,6 +150,7 @@
             // 从local获取聊天记录
             async getStorage() {
                 const cache = JSON.parse(localStorage.getItem('message'));
+                console.log(cache);
                 const arr = [];
                 for (const key in cache) {
                     if (key === 'unreadNum') continue;
@@ -193,5 +251,25 @@
     }
     .message .van-cell {
         padding: 15px 16px;
+    }
+
+    .message {
+        .message-list {
+            float: left;
+            width: 250px;
+            background-color: #fafafa;
+            height: 100vh;
+            padding: 0 15px;
+            box-sizing: border-box;
+            .ivu-list-item-meta-description {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                width: 83px;
+            }
+            .ivu-list-item {
+                cursor: pointer;
+            }
+        }
     }
 </style>

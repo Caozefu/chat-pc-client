@@ -2,17 +2,20 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import Vant from 'vant';
-import 'vant/lib/index.css';
+import Element from 'element-ui'
 import axios from './http/axios'
-import { initNotice } from "./utils/notice";
+import iview from 'view-design'
+// import { initNotice } from "./utils/notice";
+import 'element-ui/lib/theme-chalk/index.css'
+import 'view-design/dist/styles/iview.css'
 
-Vue.use(Vant);
+Vue.use(Element);
+Vue.use(iview);
 
 Vue.config.productionTip = false;
 Vue.prototype.$http = axios;
 
-initNotice();
+// initNotice();
 
 new Vue({
   router,

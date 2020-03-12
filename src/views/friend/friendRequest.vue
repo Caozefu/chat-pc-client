@@ -25,8 +25,8 @@
 </template>
 
 <script>
-    import {Toast} from 'vant';
-    import { Notify } from 'vant';
+    import { Message } from 'element-ui';
+    // import { Notify } from 'vant';
     import { mapState } from 'vuex';
     export default {
         name: "friendRequest",
@@ -44,15 +44,15 @@
                 this.$http.post('/api/applyFriend', { id })
                     .then(res => {
                         if (res.data.code === 200) {
-                            Toast.success('添加成功');
+                            Message.success('添加成功');
                             this.getRequest();
                         } else {
-                            Toast.fail(res.data.message);
+                            Message.error(res.data.message);
                             this.getRequest();
                         }
                     })
                     .catch(() => {
-                        Notify({ type: 'danger', message: '服务器异常，请稍后重试' });
+                        // Notify({ type: 'danger', message: '服务器异常，请稍后重试' });
                     })
             },
             // 获取申请列表
@@ -62,11 +62,11 @@
                         if (res.data.code === 200) {
                             this.requestList = res.data.data;
                         } else {
-                            Toast.fail(res.data.message);
+                            Message.error(res.data.message);
                         }
                     })
                     .catch(() => {
-                        Toast.fail('获取好友申请列表失败');
+                        Message.error('获取好友申请列表失败');
                     })
             }
         },

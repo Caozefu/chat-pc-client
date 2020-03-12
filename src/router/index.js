@@ -3,7 +3,7 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import axios from '../http/axios'
 import store from '../store'
-import {Toast} from 'vant';
+import { Message } from 'element-ui';
 
 /**
  * 重写路由的push方法
@@ -91,13 +91,21 @@ router.beforeEach((to, from, next) => {
                     store.commit('login', res.data.data);
                     next();
                 } else {
-                    Toast.fail('请先登陆');
+                    Message.error({
+                        message: '请先登陆',
+                        customClass: 'small-message',
+                        offset: 50,
+                    });
                     store.commit('logout');
                     next('/login');
                 }
             })
             .catch(() => {
-                Toast.fail('请先登陆');
+                Message.error({
+                    message: '请先登陆',
+                    customClass: 'small-message',
+                    offset: 50,
+                });
                 next('/login');
             })
     }

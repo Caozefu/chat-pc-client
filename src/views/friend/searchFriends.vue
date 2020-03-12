@@ -41,7 +41,7 @@
 </template>
 
 <script>
-    import {Toast} from 'vant';
+    import { Message } from 'element-ui';
     import { mapState } from 'vuex';
 
     export default {
@@ -76,20 +76,20 @@
                         }
                     })
                     .catch(() => {
-                        Toast.fail('搜索失败，请稍后重试')
+                        Message.error('搜索失败，请稍后重试')
                     })
             },
             addFriend(id) {
                 this.$http.post('/api/addFriend', {id})
                     .then(res => {
                         if (res.data.code === 200) {
-                            Toast.success('添加好友申请已发送');
+                            Message.success('添加好友申请已发送');
                         } else {
-                            Toast.fail(res.data.message);
+                            Message.error(res.data.message);
                         }
                     })
                     .catch(() => {
-                        Toast.fail('添加失败，请稍后重试');
+                        Message.error('添加失败，请稍后重试');
                     })
             }
         },
@@ -99,11 +99,11 @@
                     if (res.data.code === 200) {
                         this.requestNum = res.data.data.length;
                     } else {
-                        Toast.fail(res.data.message);
+                        Message.error(res.data.message);
                     }
                 })
                 .catch(() => {
-                    Toast.fail('获取好友申请列表失败');
+                    Message.error('获取好友申请列表失败');
                 })
         }
     }

@@ -8,7 +8,8 @@ export default new Vuex.Store({
     userInfo: null,
     isLogin: false,
     friendList: [],
-    msgNum: 0
+    msgNum: 0,
+    currentWindow: null
   },
   mutations: {
     login( state, data ) {
@@ -24,6 +25,9 @@ export default new Vuex.Store({
     },
     requestNum(state, data) {
       state.msgNum = data;
+    },
+    setWindow(state, data) {
+      state.currentWindow = data;
     }
   },
   actions: {

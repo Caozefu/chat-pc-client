@@ -53,7 +53,7 @@
 
 <script>
     import {mapState} from 'vuex';
-    import {Toast} from 'vant';
+    import {Message} from 'element-ui';
 
     export default {
         name: "settingDetail",
@@ -86,14 +86,14 @@
                 params.append('portrait', this.fileList[0].file);
                 this.$http.post('/api/upload', params).then(res => {
                     if (res.data.code === 500) {
-                        Toast.fail(res.data.message);
+                        Message.error(res.data.message);
                     } else {
                         this.type = 'portrait';
                         this.newValue = res.data.url;
                         this.confirm();
                     }
                 }).catch(e => {
-                    Toast.fail(e);
+                    Message.error(e);
                 })
             },
             // 打开弹窗
@@ -122,17 +122,17 @@
                     value: this.newValue
                 }).then(res => {
                     if (res.data.code === 200) {
-                        Toast.success('修改成功');
+                        Message.success('修改成功');
                         this.show = false;
                         this.showSexSelection = false;
                         this.showPortraitSelection = false;
                         this.newValue = '';
                         this.updateUserInfo()
                     } else {
-                        Toast.fail(res.data.message);
+                        Message.error(res.data.message);
                     }
                 }).catch(() => {
-                    Toast.fail('修改失败，请稍后重试');
+                    Message.error('修改失败，请稍后重试');
                 })
             },
             // 更改用户信息接口
@@ -142,12 +142,12 @@
                         if (res.data.code === 200) {
                             this.$store.commit('login', res.data.data);
                         } else {
-                            Toast.fail('获取用户信息失败');
+                            Message.error('获取用户信息失败');
                             this.$store.commit('logout');
                         }
                     })
                     .catch(() => {
-                        Toast.fail('获取用户信息失败');
+                        Message.error('获取用户信息失败');
                     })
             }
         },
@@ -161,13 +161,11 @@
                 switch (val) {
                     case 1:
                         return '女';
-                        break;
                     case 0:
                         return '男';
-                        break;
                     case -1:
                         return '暂未设置';
-                        break;
+                    default:
                 }
             }
         }

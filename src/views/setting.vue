@@ -27,7 +27,7 @@
 
 <script>
     import {mapState} from 'vuex';
-    import {Toast} from 'vant';
+    import { Message } from 'element-ui';
 
     export default {
         name: "setting",
@@ -38,7 +38,7 @@
         },
         methods: {
             logout() {
-                Toast.success('已退出登陆');
+                Message.success('已退出登陆');
                 this.$store.commit('logout');
                 localStorage.removeItem('token');
                 this.$router.push('/login')

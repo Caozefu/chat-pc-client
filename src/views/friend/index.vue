@@ -1,31 +1,54 @@
 <template>
-    <div class="setting">
-        <van-nav-bar title="好友列表"/>
-        <van-grid :column-num="2">
-            <van-grid-item icon="home-o" text="群聊" dot/>
-            <van-grid-item icon="search" text="添加好友" :info="msgNum ? msgNum : ''" @click="addFriend"/>
-        </van-grid>
-        <van-index-bar style="height: calc(100vh - 180px); overflow-y: scroll">
-            <template v-for="(value, key, index) in friendsList">
-                <template v-if="value.length">
-                    <van-index-anchor :index="key.toUpperCase()" :key="index"></van-index-anchor>
-                    <van-cell v-for="(sub_item, sub_index) in value"
-                              :key="sub_index" @click="friendDetail(sub_item.user_uid, sub_item.nickname)">
-                        <template slot="title">
-                            <img :src="sub_item.portrait" alt="" class="portrait">
-                            <span class="custom-title">{{sub_item.nickname}}</span>
-                        </template>
-                    </van-cell>
-                </template>
-            </template>
-        </van-index-bar>
+    <div class="friend">
+        <div class="message-list">
+            <div class="top-drag">
+
+            </div>
+            <div class="button-list">
+                <div class="button-list-item">
+                    <span>群聊</span>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+                <div class="button-list-item">
+                    <span>添加好友</span>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+                <div class="button-list-item" style="border: 0">
+                    <span>好友列表</span>
+                </div>
+            </div>
+            <el-scrollbar>
+                <address-list :list-data="friendsList" />
+            </el-scrollbar>
+        </div>
+        <div style="overflow: hidden">
+        </div>
+<!--        <van-grid :column-num="2">-->
+<!--            <van-grid-item icon="home-o" text="群聊" dot/>-->
+<!--            <van-grid-item icon="search" text="添加好友" :info="msgNum ? msgNum : ''" @click="addFriend"/>-->
+<!--        </van-grid>-->
+<!--        <van-index-bar style="height: calc(100vh - 180px); overflow-y: scroll">-->
+<!--            <template v-for="(value, key, index) in friendsList">-->
+<!--                <template v-if="value.length">-->
+<!--                    <van-index-anchor :index="key.toUpperCase()" :key="index"></van-index-anchor>-->
+<!--                    <van-cell v-for="(sub_item, sub_index) in value"-->
+<!--                              :key="sub_index" @click="friendDetail(sub_item.user_uid, sub_item.nickname)">-->
+<!--                        <template slot="title">-->
+<!--                            <img :src="sub_item.portrait" alt="" class="portrait">-->
+<!--                            <span class="custom-title">{{sub_item.nickname}}</span>-->
+<!--                        </template>-->
+<!--                    </van-cell>-->
+<!--                </template>-->
+<!--            </template>-->
+<!--        </van-index-bar>-->
     </div>
 </template>
 
 <script>
     import Pinyin from "../../utils/ChinesePY";
     import { mapState } from 'vuex';
-    import {Toast} from 'vant';
+    import { Message } from 'element-ui';
+    import AddressList from "../../components/AddressList";
 
     export default {
         name: "friends",
@@ -36,6 +59,9 @@
                 // originalFriendsList: [],
                 friendsList: {},
             }
+        },
+        components: {
+            AddressList
         },
         methods: {
             // 格式化好友列表（按字母排序）
@@ -74,9 +100,10 @@
                         this.$store.commit('updateFriendList', res.data.data);
                         this.originalFriendsList = res.data.data;
                         this.friendsList = this.formatFriendList(this.originalFriendsList);
+                        console.log(this.friendsList);
                     })
                     .catch(() => {
-                        Toast.fail('获取好友列表失败, 请刷新重试')
+                        Message.error('获取好友列表失败, 请刷新重试')
                     });
             },
         },
@@ -93,9 +120,26 @@
 </script>
 
 <style lang="less" scoped>
-    .setting {
+    .friend {
         height: 100vh;
         overflow: hidden;
+        .message-list {
+            width: 200px;
+            height: 100vh;
+            box-sizing: border-box;
+            padding: 0 15px;
+            float: left;
+            background-color: #fafafa;
+            border-right: 1px solid #f0f0f0;
+            .button-list-item {
+                padding: 12px 0;
+                border-bottom: 1px solid #e8eaec;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+            }
+        }
     }
     .portrait {
         width: 30px;

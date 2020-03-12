@@ -1,46 +1,69 @@
 <template>
     <div class="message-detail">
-        <van-nav-bar :title="userName" left-arrow @click-left="back">
-            <van-icon name="ellipsis" slot="right" />
-        </van-nav-bar>
-        <div class="message-content">
-            <ul ref="message">
-                <li v-for="(item, index) in messageList" :key="index" :class="item.type ? 'own' : 'other'">
-                    <img :src="item.portrait" alt="" v-if="!item.type">
-                    <span class="message-part">{{item.msg}}</span>
-                    <img :src="item.portrait" alt="" v-if="item.type">
-                </li>
-            </ul>
-        </div>
-        <van-tabbar class="input-bar van-hairline--top">
-            <van-field v-model="msg" center clearable style="padding: 0" @keyup.enter="send">
-                <van-button slot="button" size="small" type="primary" @click="send">发送</van-button>
-            </van-field>
-        </van-tabbar>
+        <template v-if="targetId !== -1">
+            <div class="top-drag header">
+                <el-page-header @back="back" :content="userName">
+                </el-page-header>
+            </div>
+            <div class="message-content">
+                <ul ref="message">
+                    <li v-for="(item, index) in messageList" :key="index" :class="item.type ? 'own' : 'other'">
+                        <img :src="item.portrait" alt="" v-if="!item.type">
+                        <span class="message-part">{{item.msg}}</span>
+                        <img :src="item.portrait" alt="" v-if="item.type">
+                    </li>
+                </ul>
+            </div>
+            <div class="message-input">
+                <el-input class="input-area"
+                          type="textarea"
+                          :autosize="{ minRows: 4, maxRows: 4}"
+                          resize="none"
+                          placeholder="请输入内容"
+                          v-model="msg"
+                          id="inputArea">
+                </el-input>
+
+            </div>
+        </template>
     </div>
 </template>
 
 <script>
     import { mapState } from 'vuex';
     import io from "socket.io-client";
+    const Mousetrap = require('mousetrap');
+
     export default {
         name: "messageDetail",
         data() {
             return {
-                userName: '',
                 msg: '',
                 IO: null,
                 messageList: [],
-                targetId: '',
                 messageCache: {
                     unreadNum: {}
                 }
             }
         },
+        props: {
+            userName: {
+                type: String,
+                default: ''
+            },
+            targetId: {
+                type: Number,
+                default: -1
+            }
+        },
+        activated() {
+            this.getStorage();
+            this.$nextTick(() => {
+                this.scrollToBottom();
+            });
+        },
         created() {
             this.messageCache = JSON.parse(localStorage.getItem('message')) || {unreadNum: {}};
-            this.userName = this.$route.query.name;
-            this.targetId = this.$route.query.id;
             this.IO = io.connect(process.env.VUE_APP_IO_URL);
             this.IO.on(this.userInfo.user_uid, (data) => {
                 // filter
@@ -59,6 +82,16 @@
             ...mapState({
                 userInfo: 'userInfo'
             })
+        },
+        watch: {
+            targetId(val) {
+                if (val === -1) return;
+                this.getStorage();
+                this.$nextTick(() => {
+                    this.initMouseEvent();
+                    this.scrollToBottom();
+                });
+            }
         },
         methods: {
             // 发送信息
@@ -101,6 +134,19 @@
                     cache.unreadNum[this.targetId] = 0;
                     localStorage.setItem('message', JSON.stringify(cache))
                 }
+            },
+            initMouseEvent() {
+                const text = document.querySelector('#inputArea');
+                Mousetrap(text).bind('command+enter', (e) => {
+                    e.stopPropagation();
+                    this.msg += '\n';
+                });
+                text.addEventListener('keydown', (e) => {
+                    if (e.keyCode === 13) {
+                        e.preventDefault();
+                        this.send();
+                    }
+                })
             }
         },
         mounted() {
@@ -113,10 +159,16 @@
     .message-detail {
         height: 100vh;
         background-color: #ededed;
+        .header {
+            height: 45px;
+            box-sizing: border-box;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
     }
     .message-content {
         & > ul {
-            height: calc(100vh - 96px);
+            height: calc(100vh - 170px);
             overflow-y: auto;
         }
         & > ul li {
@@ -178,6 +230,13 @@
                 }
             }
         }
+    }
+
+    .message-input {
+        padding: 15px;
+        height: 150px;
+        border-top: 1px solid #e0e0e0;
+        .input-area {}
     }
     .input-bar {
         box-sizing: border-box;
