@@ -167,6 +167,7 @@
         }
     }
     .message-content {
+        margin: 0 10px;
         & > ul {
             height: calc(100vh - 170px);
             overflow-y: auto;

@@ -1,15 +1,20 @@
 <template>
     <div class="friend">
         <div class="message-list">
-            <div class="top-drag">
-
-            </div>
+            <div class="top-drag header"></div>
             <div class="button-list">
                 <div class="button-list-item">
                     <span>群聊</span>
                     <i class="el-icon-arrow-right"></i>
                 </div>
-                <div class="button-list-item">
+                <div class="button-list-item" @click="request">
+                    <span>
+                        好友申请
+                        <span class="unread-num" v-if="requestNum">{{requestNum}}</span>
+                    </span>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+                <div class="button-list-item" @click="addFriend">
                     <span>添加好友</span>
                     <i class="el-icon-arrow-right"></i>
                 </div>
@@ -22,6 +27,8 @@
             </el-scrollbar>
         </div>
         <div style="overflow: hidden">
+            <search-friends v-if="contentType === 'add'" />
+            <friend-request v-if="contentType === 'req'" />
         </div>
 <!--        <van-grid :column-num="2">-->
 <!--            <van-grid-item icon="home-o" text="群聊" dot/>-->
@@ -49,6 +56,8 @@
     import { mapState } from 'vuex';
     import { Message } from 'element-ui';
     import AddressList from "../../components/AddressList";
+    import SearchFriends from "./searchFriends";
+    import FriendRequest from './friendRequest'
 
     export default {
         name: "friends",
@@ -58,10 +67,14 @@
                 // 原始好友列表
                 // originalFriendsList: [],
                 friendsList: {},
+                requestNum: 0,
+                contentType: ''
             }
         },
         components: {
-            AddressList
+            AddressList,
+            SearchFriends,
+            FriendRequest
         },
         methods: {
             // 格式化好友列表（按字母排序）
@@ -91,7 +104,10 @@
             },
             // 添加好友
             addFriend() {
-                this.$router.push('/search-friends');
+                this.contentType = 'add'
+            },
+            request() {
+                this.contentType = 'req'
             },
             // 获取好友列表
             getFriend() {
@@ -106,9 +122,26 @@
                         Message.error('获取好友列表失败, 请刷新重试')
                     });
             },
+            // 获取申请列表
+            getRequest() {
+                this.$http.get('/api/getRequest?id=' + this.userInfo.user_uid)
+                    .then(res => {
+                        if (res.data.code === 200) {
+                            this.requestNum = res.data.data.length;
+                        } else {
+                            Message.error(res.data.message);
+                        }
+                    })
+                    .catch(() => {
+                        Message.error('获取好友申请列表失败');
+                    })
+            }
         },
         created() {
             this.getFriend();
+            setInterval(() => {
+                this.getRequest();
+            }, 5000);
         },
         computed: {
             ...mapState({
@@ -123,6 +156,11 @@
     .friend {
         height: 100vh;
         overflow: hidden;
+        .header {
+            height: 45px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #e0e0e0;
+        }
         .message-list {
             width: 200px;
             height: 100vh;
@@ -138,6 +176,17 @@
                 justify-content: space-between;
                 align-items: center;
                 cursor: pointer;
+                .unread-num {
+                    text-decoration: none;
+                    display: inline-block;
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background-color: #f00;
+                    text-align: center;
+                    color: #fff;
+                    line-height: 18px;
+                }
             }
         }
     }

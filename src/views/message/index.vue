@@ -3,10 +3,21 @@
         <div class="message-list">
             <div class="top-drag"></div>
             <List>
-                <ListItem v-for="(item, index) in messageList" :key="index" @click.native="toDetail(item.id, item.name)">
-                    <ListItemMeta :avatar="item.portrait"
-                                  :title="item.name"
-                                  :description="item.msg" />
+                <ListItem v-for="(item, index) in messageList"
+                          :key="index"
+                          @click.native="toDetail(item.id, item.name)"
+                          class="list-item"
+                          :class="{'active': item.id === targetId}">
+                    <ListItemMeta :title="item.name"
+                                  :description="item.msg">
+                        <template slot="avatar">
+                            <el-badge :value="getUnreadNum(item.id)" class="item" v-if="getUnreadNum(item.id)">
+                                <img :src="item.portrait" alt="" style="width: 45px;">
+                            </el-badge>
+                            <img :src="item.portrait" alt="" style="width: 45px;" v-else>
+                        </template>
+                    </ListItemMeta>
+
                     <template slot="action">
                         <li>
                             <span>{{item.time | formatTime}}</span>
@@ -18,27 +29,6 @@
         <div style="overflow: hidden">
             <message-detail :user-name="userName" :target-id="targetId" />
         </div>
-<!--        <van-sticky>-->
-<!--            <van-nav-bar title="消息列表"/>-->
-<!--        </van-sticky>-->
-<!--        <van-cell-group>-->
-<!--            <van-cell v-for="(item, index) in messageList" :key="index" @click="toDetail(item.id, item.name)">-->
-<!--                <template slot="title">-->
-<!--                    <div class="message-list-left">-->
-<!--                        <div class="portrait">-->
-<!--                            <img :src="item.portrait" alt="">-->
-<!--                            <van-tag type="danger" v-if="getUnreadNum(item.id)">{{getUnreadNum(item.id)}}</van-tag>-->
-<!--                        </div>-->
-<!--                        <div class="custom-title">-->
-<!--                            <p class="user-name">{{item.name}}</p>-->
-<!--                            <p class="last-message">{{item.msg}}</p>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </template>-->
-<!--                <span class="message-time">{{item.time | formatTime}}</span>-->
-<!--            </van-cell>-->
-<!--        </van-cell-group>-->
-
     </div>
 </template>
 
@@ -150,7 +140,6 @@
             // 从local获取聊天记录
             async getStorage() {
                 const cache = JSON.parse(localStorage.getItem('message'));
-                console.log(cache);
                 const arr = [];
                 for (const key in cache) {
                     if (key === 'unreadNum') continue;
@@ -191,76 +180,18 @@
 </script>
 
 <style lang="less">
-    .top-fix {
-        width: 100vw;
-        position: fixed;
-    }
-    .message-list-left {
-        display: flex;
-        align-items: center;
-        .portrait {
-            width: 50px;
-            height: 50px;
-            /*overflow: hidden;*/
-            position: relative;
-            & > img {
-                width: 100%;
-                height: 100%;
-                border-radius: 5px;
-            }
-            .van-tag {
-                display: block;
-                width: 18px;
-                height: 18px;
-                position: absolute;
-                right: -9px;
-                top: -9px;
-                padding: 0;
-                border-radius: 50%;
-                text-align: center;
-                line-height: 18px;
-            }
-        }
-        .custom-title {
-            line-height: 10px;
-            margin-left: 10px;
-            .user-name {
-                font-weight: 900;
-                font-size: 18px;
-                /*overflow: hidden;*/
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                line-height: 24px;
-                margin: 0;
-            }
-            .last-message {
-                margin: 0;
-                line-height: 28px;
-                font-size: 14px;
-                color: #999;
-                max-width: 60vw;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-        }
-    }
-    .message-time {
-        display: block;
-        margin-top: 10px;
-    }
-    .message .van-cell {
-        padding: 15px 16px;
-    }
-
     .message {
         .message-list {
             float: left;
-            width: 250px;
+            width: 265px;
             background-color: #fafafa;
             height: 100vh;
-            padding: 0 15px;
+            /*padding: 0 15px;*/
             box-sizing: border-box;
+            .top-drag {
+                height: 45px;
+                border-bottom: 1px solid #e0e0e0;
+            }
             .ivu-list-item-meta-description {
                 white-space: nowrap;
                 text-overflow: ellipsis;
@@ -269,6 +200,12 @@
             }
             .ivu-list-item {
                 cursor: pointer;
+            }
+            .list-item {
+                padding: 12px 15px;
+            }
+            .active {
+                background-color: #d6d6d6;
             }
         }
     }

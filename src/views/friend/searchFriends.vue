@@ -1,42 +1,39 @@
 <template>
     <div class="search-friends">
-        <van-nav-bar title="添加好友" left-arrow @click-left="back">
-        </van-nav-bar>
-        <van-cell-group>
-            <van-cell is-link to="/friends-request">
-                <template slot="title">
-                    <span>好友申请  </span>
-                    <van-tag round type="danger" v-if="requestNum > 0">{{requestNum}}</van-tag>
-                </template>
-            </van-cell>
-        </van-cell-group>
-        <van-search
-                v-model="searchKey"
-                placeholder="请输入用户名/手机号"
-                show-action
-                @search="onSearch"
-        >
-            <div slot="action" @click="onSearch(searchKey)">搜索</div>
-        </van-search>
-        <van-divider v-if="searchFlag && !searchResult.length">未搜索到相关用户</van-divider>
-        <van-cell-group class="friend-list" v-else>
-            <van-cell v-for="(item, index) in searchResult" :key="index">
-                <template slot="title">
-                    <div class="message-list-left">
-                        <div class="portrait">
-                            <img :src="item.portrait" alt="">
-                        </div>
-                        <div class="custom-title">
-                            <p class="user-name">{{item.nickname}}</p>
-                            <p class="last-message">用户名：{{item.user_name}}</p>
-                        </div>
-                    </div>
-                </template>
-                <van-icon name="add-o"
-                          size="25px"
-                          @click="addFriend(item.user_uid)" v-if="item.user_uid !== userInfo.user_uid"></van-icon>
-            </van-cell>
-        </van-cell-group>
+        <div class="top-drag header">
+            <el-breadcrumb separator-class="el-icon-arrow-right">
+                <el-breadcrumb-item>好友列表</el-breadcrumb-item>
+                <el-breadcrumb-item>添加好友</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <div class="search-content">
+            <el-input placeholder="请输入用户名/手机号" v-model="searchKey" class="input-with-select" @keydown.enter.native="onSearch">
+                <el-select v-model="select" slot="prepend" placeholder="请选择">
+                    <el-option label="手机号" value="1" />
+                    <el-option label="用户名" value="2" />
+                </el-select>
+                <el-button slot="append" icon="el-icon-search" @click="onSearch" />
+            </el-input>
+            <el-divider v-if="searchFlag && !searchResult.length">未搜索到相关用户</el-divider>
+            <div class="search-result" v-else>
+                <List>
+                    <ListItem v-for="(item, index) in searchResult"
+                              :key="index">
+                        <ListItemMeta :avatar="item.portrait"
+                                      :title="item.user_name"
+                                      :description="item.nickname">
+                        </ListItemMeta>
+                        <template slot="action">
+                            <li v-if="item.user_uid !== userInfo.user_uid">
+                                <i class="el-icon-circle-plus-outline"
+                                   @click="addFriend(item.user_uid)"
+                                   style="font-size: 25px" />
+                            </li>
+                        </template>
+                    </ListItem>
+                </List>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -51,7 +48,8 @@
                 searchKey: '',
                 searchResult: [],
                 searchFlag: false,
-                requestNum: 0
+                requestNum: 0,
+                select: '1'
             }
         },
         computed: {
@@ -63,7 +61,8 @@
             back() {
                 this.$router.back();
             },
-            onSearch(key) {
+            onSearch() {
+                const key = this.searchKey.trim();
                 if (!key) return;
                 this.$http.get('/api/searchFriends?key=' + key)
                     .then(res => {
@@ -94,60 +93,36 @@
             }
         },
         created() {
-            this.$http.get('/api/getRequest?id=' + this.userInfo.user_uid)
-                .then(res => {
-                    if (res.data.code === 200) {
-                        this.requestNum = res.data.data.length;
-                    } else {
-                        Message.error(res.data.message);
-                    }
-                })
-                .catch(() => {
-                    Message.error('获取好友申请列表失败');
-                })
+
         }
     }
 </script>
 
 <style lang="less" scoped>
-    .message-list-left {
-        display: flex;
-        align-items: center;
-        .portrait {
-            width: 50px;
-            height: 50px;
-            border-radius: 5px;
-            overflow: hidden;
-            & > img {
-                width: 100%;
-                height: 100%;
+    .search-friends {
+        .header {
+            height: 45px;
+            box-sizing: border-box;
+            padding: 10px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+        .search-content {
+            padding: 10px;
+            .search-result {
+                padding: 10px 20px;
             }
         }
-        .custom-title {
-            line-height: 10px;
-            margin-left: 10px;
-            .user-name {
-                font-weight: 900;
-                font-size: 18px;
-                /*overflow: hidden;*/
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            .last-message {
-                font-size: 14px;
-                color: #999;
-            }
-        }
-    }
-    .message-time {
-        display: block;
-        margin-top: 10px;
     }
 </style>
 <style lang="less">
-    .friend-list .van-cell__value {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
+    .search-content {
+        .el-select {
+            width: 88px;
+        }
+        .el-divider__text {
+            background-color: #f7f8fa;
+        }
     }
 </style>
