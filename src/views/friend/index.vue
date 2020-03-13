@@ -28,26 +28,8 @@
         </div>
         <div style="overflow: hidden">
             <search-friends v-if="contentType === 'add'" />
-            <friend-request v-if="contentType === 'req'" />
+            <friend-request @get-friend="getFriend" v-if="contentType === 'req'" />
         </div>
-<!--        <van-grid :column-num="2">-->
-<!--            <van-grid-item icon="home-o" text="群聊" dot/>-->
-<!--            <van-grid-item icon="search" text="添加好友" :info="msgNum ? msgNum : ''" @click="addFriend"/>-->
-<!--        </van-grid>-->
-<!--        <van-index-bar style="height: calc(100vh - 180px); overflow-y: scroll">-->
-<!--            <template v-for="(value, key, index) in friendsList">-->
-<!--                <template v-if="value.length">-->
-<!--                    <van-index-anchor :index="key.toUpperCase()" :key="index"></van-index-anchor>-->
-<!--                    <van-cell v-for="(sub_item, sub_index) in value"-->
-<!--                              :key="sub_index" @click="friendDetail(sub_item.user_uid, sub_item.nickname)">-->
-<!--                        <template slot="title">-->
-<!--                            <img :src="sub_item.portrait" alt="" class="portrait">-->
-<!--                            <span class="custom-title">{{sub_item.nickname}}</span>-->
-<!--                        </template>-->
-<!--                    </van-cell>-->
-<!--                </template>-->
-<!--            </template>-->
-<!--        </van-index-bar>-->
     </div>
 </template>
 
@@ -142,6 +124,9 @@
             setInterval(() => {
                 this.getRequest();
             }, 5000);
+        },
+        activated() {
+            this.getFriend();
         },
         computed: {
             ...mapState({
